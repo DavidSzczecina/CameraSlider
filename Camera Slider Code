@@ -1,0 +1,115 @@
+/* 
+ *    David Szczecina 
+ *    17/5/2021
+ *    Camera Slidder Code
+ */
+
+// defines pins numbers
+const int stepPin = 11; 
+const int dirPin = 12; 
+const int ms1 = 4; 
+const int ms2 = 3; 
+const int ms3 = 2; 
+  // Defines variables
+   int customDelay; //lower number means faster
+   int customDelayMapped;
+   int customDist; // updated during turning (stops going left, starts going right)
+   int customDistMapped;
+  
+void setup() {
+  Serial.begin(9600);
+  
+  // Sets the two pins as Outputs
+  pinMode(stepPin,OUTPUT); 
+  pinMode(dirPin,OUTPUT);
+  pinMode(ms1,OUTPUT);
+  pinMode(ms2,OUTPUT);
+  pinMode(ms3,OUTPUT);
+  pinMode(5,OUTPUT);
+  pinMode(6,INPUT);
+  pinMode(8,INPUT);
+  pinMode(9,INPUT);
+  
+  digitalWrite(ms1,HIGH);
+  digitalWrite(ms2,HIGH);
+  digitalWrite(ms3,HIGH);
+  digitalWrite(5,HIGH);
+  
+
+}
+void loop() {
+  
+  if (digitalRead(6) == HIGH) {
+    
+    Serial.println(digitalRead(8));
+    
+  } else {
+    
+  
+  customDistMapped = newDistance();
+   customDelayMapped = speedUp(); // Gets custom delay values from the custom speedUp function
+ // Serial.print(customDelayMapped);
+  digitalWrite(dirPin,HIGH); // Enables the motor to move in a particular direction
+  // (Depends on full step or sixteenth step) -----Makes 200 pulses for making one full cycle rotation
+  
+    for(int x = 0; x < customDistMapped; x++) {
+  //for(int x = 0; x < 1000; x++) {
+     customDelayMapped = speedUp(); // Gets custom delay values from the custom speedUp function
+    digitalWrite(stepPin,HIGH); 
+    delayMicroseconds(customDelayMapped); 
+    digitalWrite(stepPin,LOW); 
+    delayMicroseconds(customDelayMapped); 
+  }
+  delay(1000); // One second delay
+  customDistMapped = newDistance();
+  
+  digitalWrite(dirPin,LOW); //Changes the rotations direction
+  // Makes x pulses for making two full cycle rotation
+  
+  for(int x = 0; x < customDistMapped; x++) {
+  //for(int x = 0; x < 1000; x++) {
+     customDelayMapped = speedUp(); // Gets custom delay values from the custom speedUp function
+    digitalWrite(stepPin,HIGH);
+    delayMicroseconds(customDelayMapped);
+    digitalWrite(stepPin,LOW);
+    delayMicroseconds(customDelayMapped);
+  }
+  delay(1000);
+  customDistMapped = newDistance();
+ // Serial.println(customDist);
+ Serial.println(customDistMapped);
+}
+
+}
+
+
+
+
+
+// Function for reading the Potentiometer
+int speedUp() {
+   // Serial.println(analogRead(A1));
+  
+  int customDelay = analogRead(A1); // Reads the potentiometer
+  int newCustom = map(customDelay, 0, 1023, 200, 6000); // Convrests the read values of the potentiometer from 0 to 1023 into desireded delay values (300 to 4000)
+  return newCustom;  
+}
+
+
+//Function for changing the distance traveled by camera
+int newDistance() { //updates the distance to be whatever the potentiometer wants it to be
+  //Serial.println(analogRead(A7)); //print 'potentiometer' value
+   int customDist = analogRead(A7); // Reads the potentiometer
+  int newCustomDist = map(customDist, 0, 1023, 1000, 16000);
+  return newCustomDist;
+}
+
+
+/*
+MS1   MS2   MS3   Resolution
+Low   Low   Low   Full Step
+High   Low   Low   Half Step
+Low   High   Low   Quarter Step
+High   High   Low   Eigth Step
+High   High   High   Sixteenth Step
+*/
